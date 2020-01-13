@@ -1,26 +1,29 @@
-cmake_minimum_required(VERSION 2.8)
-project(Platformer)
+cmake_minimum_required(VERSION 3.5)
+project(Platformer LANGUAGES C)
 
 set(LIBS
     SDL2
 	SDL2_image)
 
 set(HDR
-	headers/collision.h
-	headers/renderer.h
-	headers/player.h
+    "headers/collision.h"
+    "headers/renderer.h"
+    "headers/player.h"
 	)
 
 set(SRC
-    src/main.c
-	src/collision.c
-	src/renderer.c
-	src/player.c
+    "sources/main.c"
+    "sources/collision.c"
+    "sources/renderer.c"
+    "sources/player.c"
 	)
 
-include_directories(headers)
+#include_directories(sources)
 
-add_compile_options( -g -fexceptions --std=c11 -Wall -O22)
+file(COPY characters.png DESTINATION ${CMAKE_BINARY_DIR})
+
+add_compile_options(-fexceptions --std=c11 -Wall) #-O2
 add_executable(${PROJECT_NAME} ${SRC} ${HDR})
 
+target_include_directories(${PROJECT_NAME} PUBLIC headers)
 target_link_libraries(${PROJECT_NAME} ${LIBS})

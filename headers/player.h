@@ -2,13 +2,13 @@
 
 typedef struct player
 {
-	int (*getX)();
-	int (*getY)();
-	int (*getWidth)();
-	int (*getHeight)();
-	int (*getTextureId)();
-	int (*getTextX)();
-	int (*getTextY)();
+    int (*getX)(struct player*);
+    int (*getY)(struct player*);
+    int (*getWidth)(struct player*);
+    int (*getHeight)(struct player*);
+    int (*getTextureId)(struct player*);
+    int (*getTextX)(struct player*);
+    int (*getTextY)(struct player*);
 	int x;
 	int y;
 	int width;
@@ -16,6 +16,7 @@ typedef struct player
 	int textX;
 	int textY;
 	int textId;
+    int vel;
 }player_t;
 
-player_t createPlayer();
+player_t createPlayer(void);

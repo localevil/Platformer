@@ -44,7 +44,8 @@ player_t createPlayer()
 		player_getHeight,
 		player_getTextureId,
 		player_getTextX,
-		player_getTextY
+        player_getTextY,
+        0,0,0,0,0,0,0
 	};
 	return p;
 }
