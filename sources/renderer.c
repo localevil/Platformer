@@ -14,6 +14,7 @@ struct grafic_object
     int (*getTextureId)(struct grafic_object*);
     int (*getTextX)(struct grafic_object*);
     int (*getTextY)(struct grafic_object*);
+    void (*processAnimation)(struct grafic_object*);
 };
 
 static SDL_Window *window;
@@ -24,6 +25,11 @@ static int lastTextInList = 0;
 
 static struct grafic_object *objects[10] = {0};
 static int lastObjInList = 0;
+
+static const Uint8 *keys = 0;
+
+#define ANIMATION_DELAY 250
+#define RENDER_DELAY 16
 
 int addTexture(const char* path)
 {
@@ -61,7 +67,7 @@ static int renderObjects()
     for (int i = 0; i < lastObjInList; ++i)
 	{
 		struct grafic_object *currentObj = objects[i];
-		SDL_Rect dst = {currentObj->getX(currentObj), currentObj->getY(currentObj), currentObj->getWidth(currentObj), currentObj->getHeight(currentObj)};
+        SDL_Rect dst = {currentObj->getX(currentObj), currentObj->getY(currentObj), currentObj->getWidth(currentObj), currentObj->getHeight(currentObj)};
         SDL_Rect src = {currentObj->getTextX(currentObj), currentObj->getTextY(currentObj), currentObj->getWidth(currentObj), currentObj->getHeight(currentObj)};
         if (SDL_RenderCopy(renderer, textures[currentObj->getTextureId(currentObj)], &src, &dst) < 0)
         {
@@ -80,41 +86,52 @@ int initRenderer()
 	renderer = SDL_CreateRenderer(window, 0, 0);
 	if (renderer == NULL)
         return 1;
-    IMG_Init(IMG_INIT_PNG);
+    keys = SDL_GetKeyboardState(NULL);
 	return 0;
 }
 
-int presentRenderer(void (*underLoop)(void))
+int presentRenderer(void (*underLoop)(const Uint8*))
 {
 	bool quit = false;
-    unsigned int lastTime = 0;
+    unsigned int animationLastTime = 0, renderLastTime = 0;
+    int framsCount = 0;
 	while(!quit)
 	{
-		static SDL_Event event;
-		while(SDL_PollEvent(&event))
-		{
-			switch (event.type) {
-			case SDL_QUIT:
-				quit = true;
-				break;
-			}
+        static SDL_Event event;
+        while(SDL_PollEvent(&event))
+        {
+            switch (event.type) {
+            case SDL_QUIT:
+                quit = true;
+                break;
+            }
         }
 
-        unsigned int currentTime = SDL_GetTicks();
-        if (currentTime > lastTime + 600)
-        {
-            if (underLoop != NULL)
-                underLoop();
+        underLoop(keys);
 
+        unsigned int currentTime = SDL_GetTicks();
+        if (currentTime > animationLastTime + ANIMATION_DELAY)
+        {
+            for (int i = 0; i < lastObjInList; i++)
+            {
+                struct grafic_object *obj = objects[i];
+                obj->processAnimation(obj);
+            }
+            animationLastTime = currentTime;
+        }
+
+        if (currentTime > renderLastTime + RENDER_DELAY)
+        {
             if (renderer == NULL)
                 return 1;
 
             SDL_RenderClear(renderer);
             renderObjects();
             SDL_RenderPresent(renderer);
-            lastTime = currentTime;
-            continue;
+            renderLastTime = currentTime;
+            framsCount++;
         }
+
 	}
 	return 0;
 }

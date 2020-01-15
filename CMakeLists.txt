@@ -3,19 +3,21 @@ project(Platformer LANGUAGES C)
 
 set(LIBS
     SDL2
-	SDL2_image)
+    SDL2_image)
 
 set(HDR
     "headers/collision.h"
     "headers/renderer.h"
     "headers/player.h"
-	)
+    "headers/movement.h"
+    )
 
 set(SRC
     "sources/main.c"
     "sources/collision.c"
     "sources/renderer.c"
     "sources/player.c"
+    "sources/movement.c"
 	)
 
 #include_directories(sources)
