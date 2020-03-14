@@ -1,10 +1,13 @@
 #pragma once
 #include <stdint.h>
 
-struct grafic_object;
+typedef struct game_renderer game_renderer_t;
+typedef struct graphic_object graphic_object_t;
 
-int addTexture(const char* path);
-int addObject(struct grafic_object *obj);
+typedef void (*fnUnderLoop)(const uint8_t*, graphic_object_t**);
+
+int addTexture(const char*);
+int addObject(graphic_object_t *);
 int initRenderer(void);
-int presentRenderer(void (*underLoop)(const uint8_t *));
+int presentRenderer(fnUnderLoop underLoop);
 int deleteRenderer(void);

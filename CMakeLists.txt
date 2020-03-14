@@ -22,7 +22,7 @@ set(SRC
 
 #include_directories(sources)
 
-file(COPY characters.png DESTINATION ${CMAKE_BINARY_DIR})
+#file(COPY characters.png ${CMAKE_BINARY_DIR})
 
 add_compile_options(-fexceptions --std=c11 -Wall) #-O2
 add_executable(${PROJECT_NAME} ${SRC} ${HDR})

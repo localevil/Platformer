@@ -2,20 +2,24 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-#include <stdbool.h>
 #include <stdio.h>
 
-struct grafic_object
+#define CREATE_DUMMY(count) int (*dummy ## count)(graphic_object_t *)
+typedef int (*fnPtr)(graphic_object_t*);
+
+typedef struct graphic_object
 {
-    int (*getX)(struct grafic_object*);
-    int (*getY)(struct grafic_object*);
-    int (*getWidth)(struct grafic_object*);
-    int (*getHeight)(struct grafic_object*);
-    int (*getTextureId)(struct grafic_object*);
-    int (*getTextX)(struct grafic_object*);
-    int (*getTextY)(struct grafic_object*);
-    void (*processAnimation)(struct grafic_object*);
-};
+    fnPtr getX;
+    fnPtr getY;
+    CREATE_DUMMY(0);
+    CREATE_DUMMY(1);
+    fnPtr getTextureId;
+    fnPtr getTextX;
+    fnPtr getTextY;
+    fnPtr getTextWidth;
+    fnPtr getTextHeight;
+    fnPtr processAnimation;
+}graphic_object_t;
 
 static SDL_Window *window;
 static SDL_Renderer *renderer;
@@ -23,7 +27,7 @@ static SDL_Renderer *renderer;
 static SDL_Texture *textures[10] = {0};
 static int lastTextInList = 0;
 
-static struct grafic_object *objects[10] = {0};
+static graphic_object_t *objects[10] = {0};
 static int lastObjInList = 0;
 
 static const Uint8 *keys = 0;
@@ -53,22 +57,22 @@ int addTexture(const char* path)
 	
 }
 
-int addObject(struct grafic_object *obj)
+int addObject(graphic_object_t *obj)
 {
-	if (lastObjInList >= 10)
-		return 1;
+    if (lastObjInList >= 10)
+        return 1;
 
-	objects[lastObjInList++] = obj;
-	return 0;
+    objects[lastObjInList++] = obj;
+    return 0;
 }
 
 static int renderObjects()
 {
     for (int i = 0; i < lastObjInList; ++i)
 	{
-		struct grafic_object *currentObj = objects[i];
-        SDL_Rect dst = {currentObj->getX(currentObj), currentObj->getY(currentObj), currentObj->getWidth(currentObj), currentObj->getHeight(currentObj)};
-        SDL_Rect src = {currentObj->getTextX(currentObj), currentObj->getTextY(currentObj), currentObj->getWidth(currentObj), currentObj->getHeight(currentObj)};
+        struct graphic_object *currentObj = objects[i];
+        SDL_Rect dst = {currentObj->getX(currentObj), currentObj->getY(currentObj), currentObj->getTextWidth(currentObj), currentObj->getTextHeight(currentObj)};
+        SDL_Rect src = {currentObj->getTextX(currentObj), currentObj->getTextY(currentObj), currentObj->getTextWidth(currentObj), currentObj->getTextHeight(currentObj)};
         if (SDL_RenderCopy(renderer, textures[currentObj->getTextureId(currentObj)], &src, &dst) < 0)
         {
             printf("%s\n", SDL_GetError());
@@ -82,7 +86,7 @@ int initRenderer()
 	SDL_Init(SDL_INIT_VIDEO);
     window = SDL_CreateWindow("King story", 0, 0, 640, 480, 0);
 	if (window == NULL)
-		return 1;
+        return 1;
 	renderer = SDL_CreateRenderer(window, 0, 0);
 	if (renderer == NULL)
         return 1;
@@ -90,9 +94,9 @@ int initRenderer()
 	return 0;
 }
 
-int presentRenderer(void (*underLoop)(const Uint8*))
+int presentRenderer(fnUnderLoop underLoop)
 {
-	bool quit = false;
+    int quit = 0;
     unsigned int animationLastTime = 0, renderLastTime = 0;
     int framsCount = 0;
 	while(!quit)
@@ -102,19 +106,19 @@ int presentRenderer(void (*underLoop)(const Uint8*))
         {
             switch (event.type) {
             case SDL_QUIT:
-                quit = true;
+                quit = 1;
                 break;
             }
         }
 
-        underLoop(keys);
+        underLoop(keys, objects);
 
         unsigned int currentTime = SDL_GetTicks();
         if (currentTime > animationLastTime + ANIMATION_DELAY)
         {
             for (int i = 0; i < lastObjInList; i++)
             {
-                struct grafic_object *obj = objects[i];
+                struct graphic_object *obj = objects[i];
                 obj->processAnimation(obj);
             }
             animationLastTime = currentTime;
