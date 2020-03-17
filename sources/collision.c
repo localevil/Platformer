@@ -2,10 +2,10 @@
 #include <stdio.h>
 
 struct collision_object{
-    int (*getX)(struct collision_object*);
-    int (*getY)(struct collision_object*);
-    int (*getWidth)(struct collision_object*);
-    int (*getHeight)(struct collision_object*);
+	int (*getX)(struct collision_object*);
+	int (*getY)(struct collision_object*);
+	int (*getWidth)(struct collision_object*);
+	int (*getHeight)(struct collision_object*);
 };
 
 int check_collision(struct collision_object *obj1, struct collision_object *obj2)

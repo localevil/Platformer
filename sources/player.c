@@ -1,153 +1,136 @@
 #include "player.h"
 #include <stdlib.h>
+#include <stdint.h>
 
-typedef int (*fnPtr) (player_t*);
+struct player {
+	int x;
+	int y;
+	int width;
+	int height;
+	int textX;
+	int textY;
+	int textWidth;
+	int textHeight;
+	int on_floor;
+};
 
-typedef int (*fnPtrInt)(player_t*, int);
-
-typedef struct player {
-   fnPtr getX;
-   fnPtr getY;
-   fnPtr getWidth;
-   fnPtr getHeight;
-   fnPtr getTextureId;
-   fnPtr getTextX;
-   fnPtr getTextY;
-   fnPtr getTextWidth;
-   fnPtr getTextHeight;
-   fnPtr processAnumation;
-   fnPtr getVel;
-   fnPtrInt setX;
-   fnPtrInt setY;
-   int x;
-   int y;
-   int width;
-   int height;
-   int textX;
-   int textY;
-   int textWidth;
-   int textHeight;
-   int textId;
-   int vel;
-}player_t;
-
-int player_getX(player_t *p)
+int player_get_x(player_t *p)
 {
 	return p->x;
 }
 
-int player_getY(player_t *p)
+int player_get_y(player_t *p)
 {
 	return p->y;
 }
 
-int player_getWidth(player_t *p)
+int player_get_width(player_t *p)
 {
 	return p->width;
 }
 
-int player_getHeight(player_t *p)
+int player_get_height(player_t *p)
 {
 	return p->height;
 }
 
-int player_getTextureId(player_t *p)
-{
-	return p->textId;
-}
-
-int player_getTextX(player_t *p)
+int player_get_text_x(player_t *p)
 {
 	return p->textX;
 }
 
-int player_getTextY(player_t *p)
+int player_get_text_y(player_t *p)
 {
 	return p->textY;
 }
 
-int player_getTextWidth(player_t *p)
+int player_get_text_width(player_t *p)
 {
-    return p->textWidth;
+	return p->textWidth;
 }
 
-int player_getTextHeight(player_t *p)
+int player_get_text_height(player_t *p)
 {
-    return p->textHeight;
+	return p->textHeight;
 }
 
-int player_processAnimation(player_t *p)
+int player_set_on_floor(player_t *p, int flag)
 {
-    static int count = 0;
-    p->textX = count * p->textHeight;
-    if (count < 3)
-        count++;
-    else
-        count = 0;
-    return 0;
+	return p->on_floor = flag;
 }
 
-int player_getVel(player_t * p)
+int player_on_floor(player_t *p)
 {
-    return p->vel;
+	return p->on_floor;
 }
 
-int player_setX(player_t* p, int newX)
+int player_process_animation(player_t *p)
 {
-    p->x = newX;
-    return 0;
+	static int count = 0;
+	p->textX = count * p->textHeight;
+	if (count < 3)
+		count++;
+	else
+		count = 0;
+	return 0;
 }
 
-int player_setY(player_t* p, int newY)
+int player_move(player_t *p, duration_t d)
 {
-    p->y = newY;
-    return 0;
+	static const uint8_t JUMP = 250;
+	static const uint8_t VEL = 1;
+
+	switch (d) {
+	case LEFT:
+		p->x -= VEL;
+		break;
+	case RIGHT:
+		p->x += VEL;
+		break;
+	case UP:
+		if (p->y > p->y + JUMP)
+		{
+			return 1;
+		}
+		p->y -= VEL;
+		break;
+	case DOWN:
+		p->y += VEL;
+		break;
+	}
+	return 0;
 }
 
-player_t *createPlayer(int textId, int width, int heigth, int textX, int textY, int textWidth, int textHeight, int x, int y, int vel)
+player_t *player_create(int width, int heigth, int textX, int textY, int textWidth, int textHeight, int x, int y)
 {
 
-    player_t *p = (player_t*)malloc(sizeof(player_t));
-        p->getX = player_getX;
-        p->getY = player_getY;
-        p->getWidth = player_getWidth;
-        p->getHeight = player_getHeight;
-        p->getTextureId = player_getTextureId;
-        p->getTextX = player_getTextX;
-        p->getTextY = player_getTextY;
-        p->getTextWidth = player_getTextWidth;
-        p->getTextHeight = player_getTextHeight;
-        p->processAnumation = player_processAnimation;
-        p->getVel = player_getVel;
-        p->setX = player_setX;
-        p->setY = player_setY;
-        p->x = x;
-        p->y = y;
-        p->vel = vel;
-        p->width = width;
-        p->height = heigth;
-        p->textId = textId;
-        p->textX = textX;
-        p->textY = textY;
-        p->textWidth = textWidth;
-        p->textHeight = textHeight;
+	player_t *p = (player_t*)malloc(sizeof(player_t));
+		p->x = x;
+		p->y = y;
+		p->width = width;
+		p->height = heigth;
+		p->textX = textX;
+		p->textY = textY;
+		p->textWidth = textWidth;
+		p->textHeight = textHeight;
+		p->on_floor = 0;
 	return p;
 }
 
 player_t *copyPlayer(player_t *p1)
 {
-    player_t *p2 = NULL;
-    if (p1 != NULL)
-    {
-        p2 = (player_t *)malloc(sizeof (player_t));
-        *p2 = *p1;
-    }
-    return p2;
+	player_t *p2 = NULL;
+	if (p1 != NULL)
+	{
+		p2 = (player_t *)malloc(sizeof (player_t));
+		*p2 = *p1;
+	}
+	return p2;
 }
 
 void deletePlayer(player_t *p)
 {
-    if (p != NULL)
-        free(p);
+	if (p != NULL)
+		free(p);
 }
 
