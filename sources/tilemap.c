@@ -47,7 +47,8 @@ tilemap_t *tilemap_create(SDL_Renderer* ren, const char * path, uint32_t size,
 	return tm;
 }
 
-int tilemap_draw_tile(tilemap_t * tm, uint32_t tile_id, vector2d_t pos)
+int tilemap_draw_tile(tilemap_t * tm, uint32_t tile_id, vector2d_t pos,
+						uint8_t flip)
 {
 	if (tile_id > tm->size)
 			return -1;
@@ -56,7 +57,7 @@ int tilemap_draw_tile(tilemap_t * tm, uint32_t tile_id, vector2d_t pos)
 	SDL_Rect dst = {pos.x, pos.y, tm->tile_width, tm->tile_height};
 	SDL_Rect src = {col * tm->tile_width, row * tm->tile_width, tm->tile_width, tm->tile_height};
 
-	if (SDL_RenderCopy(tm->renderer, tm->texture, &src, &dst) < 0)
+	if (SDL_RenderCopyEx(tm->renderer, tm->texture, &src, &dst, 0, NULL, flip) < 0)
 	{
 		printf("%s\n", SDL_GetError());
 		return -1;
@@ -66,8 +67,11 @@ int tilemap_draw_tile(tilemap_t * tm, uint32_t tile_id, vector2d_t pos)
 
 int tilemap_delete(tilemap_t *tm)
 {
-	if (tm != NULL && tm->texture != NULL)
-		SDL_DestroyTexture(tm->texture);
-
+	if (tm != NULL)
+	{
+		if (tm->texture != NULL)
+			SDL_DestroyTexture(tm->texture);
+		free(tm);
+	}
 	return 0;
 }

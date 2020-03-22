@@ -14,6 +14,8 @@ set(HDR
 	"headers/engine.h"
 	"headers/tilemap.h"
 	"headers/vector2d.h"
+	"headers/game_object.h"
+	"headers/enemy.h"
 	)
 
 set(SRC
@@ -24,6 +26,8 @@ set(SRC
 	"sources/player.c"
 	"sources/tilemap.c"
 	"sources/vector2d.c"
+	"sources/game_object.c"
+	"sources/enemy.c"
 	)
 
 #include_directories(sources)
