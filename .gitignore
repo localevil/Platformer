@@ -1,3 +1,6 @@
+#CMake files
+*.user
+
 # Prerequisites
 *.d
 

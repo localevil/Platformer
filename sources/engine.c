@@ -2,72 +2,31 @@
 
 #include <stdlib.h>
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
 
 #include "player.h"
-
-static const uint8_t COLLISION_WIDTH = 16;
-static const uint8_t COLLISION_HEIGHT = 22;
-static const uint8_t TEXTURE_CELL = 32;
+#include "tilemap.h"
+#include "vector2d.h"
 
 struct engine {
 	uint8_t running;
 	SDL_Window *window;
 	SDL_Renderer *renderer;
 
-	SDL_Texture *textures[10];
-	int lastTextInList;
+	tilemap_t * creatures;
 
 	player_t *player;
 	const uint8_t *keys;
 };
 
-static int add_texture(engine_t *e, const char* path)
-{
-	int result = 0;
-	SDL_Surface * loadSurf = IMG_Load(path);
-
-	SDL_Texture *newTexture = SDL_CreateTextureFromSurface(e->renderer, loadSurf);
-	if (newTexture != NULL)
-	{
-		e->textures[e->lastTextInList] = newTexture;
-		result = e->lastTextInList++;
-	}else
-	{
-		printf("%s\n", SDL_GetError());
-		return -1;
-	}
-	SDL_FreeSurface(loadSurf);
-	return result;
-
-}
-
-static int render_player(engine_t *e)
-{
-	SDL_Rect dst = {player_get_x(e->player),
-					player_get_y(e->player),
-					player_get_text_width(e->player),
-					player_get_text_height(e->player)};
-	SDL_Rect src = {player_get_text_x(e->player),
-					player_get_text_y(e->player),
-					player_get_text_width(e->player),
-					player_get_text_height(e->player)};
-
-	if (SDL_RenderCopy(e->renderer, e->textures[0], &src, &dst) < 0)
-	{
-		printf("%s\n", SDL_GetError());
-	}
-	return 0;
-}
-
 engine_t *engine_init(engine_options_t *e_options)
 {
 	engine_t *e = (engine_t *)malloc(sizeof (engine_t));
 
-	e->running = 0;
+	e->running = 1;
 
 	if (!SDL_Init(SDL_INIT_VIDEO)) {
 		printf("SDL init failed: %s\n", SDL_GetError());
+		e->running = 0;
 	}
 
 	if (e_options == NULL) {
@@ -83,25 +42,32 @@ engine_t *engine_init(engine_options_t *e_options)
 										 0);
 	if (e->window == NULL) {
 		printf("Create window failed: %s\n", SDL_GetError());
+		e->running = 0;
 	}
 
 	e->renderer = SDL_CreateRenderer(e->window,0,0);
 	if (e->renderer == NULL) {
 		printf("Create renderer failed: %s\n", SDL_GetError());
-	} else {
-		e->running = 1;
+		e->running = 0;
 	}
-	add_texture(e, "assets/characters.png");
-	e->player = player_create(	COLLISION_WIDTH,
-								COLLISION_HEIGHT,
-								0,
-								2 * TEXTURE_CELL,
-								TEXTURE_CELL,
-								TEXTURE_CELL,
-								0,
-								0);
+		static const uint8_t TILE_CELL = 32;
+	e->creatures = tilemap_create(e->renderer, "assets/characters.png",
+									73, 4, 23, TILE_CELL, TILE_CELL);
+	if (e->creatures == NULL)
+	{
+		e->running = 0;
+	}
+
+	static const uint8_t COLLISION_WIDTH = 16;
+	static const uint8_t COLLISION_HEIGHT = 22;
+
+	vector2d_t player_pos = {0, 420 - TILE_CELL};
+	e->player = player_create(COLLISION_WIDTH, COLLISION_HEIGHT, player_pos,
+								23, e->creatures);
 
 	e->keys = SDL_GetKeyboardState(NULL);
+
+	e->running = 1;
 	return e;
 }
 
@@ -122,20 +88,22 @@ int engine_handle_events(engine_t *e)
 		}
 	}
 
-	static const uint8_t EVENT_DELAY = 25;
+	static const uint8_t EVENT_DELAY = 5;
 
 	static uint32_t lastTime = 0;
 	uint32_t currentTime = SDL_GetTicks();
 	if (currentTime > lastTime + EVENT_DELAY)
 	{
+		vector2d_t duration = {0};
 		if (e->keys[SDL_SCANCODE_LEFT] || e->keys[SDL_SCANCODE_A])
-			player_move(e->player, LEFT);
+			duration.x--;
 		if (e->keys[SDL_SCANCODE_RIGHT] || e->keys[SDL_SCANCODE_D])
-			player_move(e->player, RIGHT);
-		if (e->keys[SDL_SCANCODE_UP] || e->keys[SDL_SCANCODE_W])
-			player_move(e->player, UP);
-		else if (e->keys[SDL_SCANCODE_DOWN] || e->keys[SDL_SCANCODE_S])
-			player_move(e->player, DOWN);
+			duration.x++;
+		if (e->keys[SDL_SCANCODE_UP])
+			duration.y--;
+		if (e->keys[SDL_SCANCODE_DOWN])
+			duration.y++;
+		player_move(e->player, vector2d_normalize(duration));
 		lastTime = currentTime;
 	}
 
@@ -144,22 +112,14 @@ int engine_handle_events(engine_t *e)
 
 int engine_update(engine_t *e)
 {
-	static const uint8_t ANIMATION_DELAY = 250;
-	static uint32_t lastTime = 0;
-
-	uint32_t currentTime = SDL_GetTicks();
-	if (currentTime > lastTime + ANIMATION_DELAY)
-	{
-		player_process_animation(e->player);
-		lastTime = currentTime;
-	}
+	player_update(e->player);
 	return 0;
 }
 
 int engine_render(engine_t *e)
 {
 	SDL_RenderClear(e->renderer);
-	render_player(e);
+	player_renderer(e->player);
 	SDL_RenderPresent(e->renderer);
 	return 0;
 }

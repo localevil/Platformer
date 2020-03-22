@@ -4,6 +4,7 @@ project(Platformer LANGUAGES C)
 set(LIBS
 	SDL2
 	SDL2_image
+	m
 	)
 
 set(HDR
@@ -11,6 +12,8 @@ set(HDR
 	"headers/renderer.h"
 	"headers/player.h"
 	"headers/engine.h"
+	"headers/tilemap.h"
+	"headers/vector2d.h"
 	)
 
 set(SRC
@@ -19,6 +22,8 @@ set(SRC
 	"sources/collision.c"
 	"sources/renderer.c"
 	"sources/player.c"
+	"sources/tilemap.c"
+	"sources/vector2d.c"
 	)
 
 #include_directories(sources)
