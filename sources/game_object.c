@@ -18,6 +18,11 @@ vector2d_t game_object_get_pos(game_object_t *p)
 	return p->pos;
 }
 
+vector2d_t game_object_set_pos(game_object_t *p, vector2d_t pos)
+{
+	p->pos = pos;
+	return p->pos;
+}
 uint32_t game_object_get_width(game_object_t *p)
 {
 	return p->width;
@@ -50,6 +55,12 @@ uint32_t game_object_set_flip(game_object_t *p, uint8_t flip)
 	return 0;
 }
 
+uint8_t game_object_get_flip(game_object_t *p)
+{
+	return p->flip;
+}
+
+
 uint32_t game_object_draw(game_object_t *p)
 {
 	tilemap_draw_tile(p->tm, p->tile_id, p->pos, p->flip);
@@ -63,7 +74,7 @@ uint32_t game_object_move(game_object_t *p, vector2d_t d)
 }
 
 game_object_t *game_object_create(uint32_t width, uint32_t heigth, vector2d_t pos,
-						uint32_t tile_id, tilemap_t * tm)
+						uint32_t tile_id, tilemap_t *tm)
 {
 
 	game_object_t *p = (game_object_t*)malloc(sizeof(game_object_t));
@@ -91,6 +102,8 @@ game_object_t *game_object_create(uint32_t width, uint32_t heigth, vector2d_t po
 void game_object_delete(game_object_t *p)
 {
 	if (p != NULL)
+	{
 		free(p);
+	}
 }
 

@@ -17,17 +17,20 @@ enemy_t *enemy_create(game_object_t *go, vector2d_t d)
 uint32_t enemy_update(enemy_t *e)
 {
 	vector2d_t pos = game_object_get_pos(e->go);
-	if (pos.x >=640)
+	vector2d_t new_duration = e->duration;
+	if (pos.x >=640 || pos.x <= 0)
 	{
-		e->duration.x = -e->duration.x;
-		game_object_set_flip(e->go, SDL_FLIP_HORIZONTAL);
-	}else if (pos.x <= 0)
-	{
-		e->duration.x = -e->duration.x;
-		game_object_set_flip(e->go, SDL_FLIP_NONE);
+		new_duration.x = -new_duration.x;
+		e->duration= new_duration;
+		new_duration.y = 10;
+
+		if (pos.x <= 0)
+			game_object_set_flip(e->go, SDL_FLIP_NONE);
+		else
+			game_object_set_flip(e->go, SDL_FLIP_HORIZONTAL);
 	}
 
-	game_object_move(e->go, vector2d_normalize(e->duration));
+	game_object_move(e->go, new_duration);
 	return 0;
 }
 

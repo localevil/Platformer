@@ -14,6 +14,7 @@ struct engine {
 	SDL_Renderer *renderer;
 
 	tilemap_t * creatures;
+	tilemap_t * swoosh;
 
 	player_t *player;
 	enemy_t *enemy;
@@ -52,7 +53,8 @@ engine_t *engine_init(engine_options_t *e_options)
 		printf("Create renderer failed: %s\n", SDL_GetError());
 		e->running = 0;
 	}
-		static const uint8_t TILE_CELL = 32;
+
+	const uint8_t TILE_CELL = 32;
 	e->creatures = tilemap_create(e->renderer, "assets/characters.png",
 									73, 4, 23, TILE_CELL, TILE_CELL);
 	if (e->creatures == NULL)
@@ -60,12 +62,20 @@ engine_t *engine_init(engine_options_t *e_options)
 		e->running = 0;
 	}
 
-	static const uint8_t COLLISION_WIDTH = 16;
-	static const uint8_t COLLISION_HEIGHT = 22;
+	e->swoosh = tilemap_create(e->renderer, "assets/swoosh.png",
+									73, 4, 23, TILE_CELL, TILE_CELL * 2);
+	if (e->swoosh == NULL)
+	{
+		e->running = 0;
+	}
+
+	const uint8_t COLLISION_WIDTH = 16;
+	const uint8_t COLLISION_HEIGHT = 22;
 
 	vector2d_t player_pos = {0, 420 - TILE_CELL};
-	e->player = game_object_create(COLLISION_WIDTH, COLLISION_HEIGHT,
-									player_pos, 23, e->creatures);
+	e->player = player_create(game_object_create(COLLISION_WIDTH,
+												 COLLISION_HEIGHT,player_pos,
+												 23, e->creatures), e->swoosh);
 
 	vector2d_t enemy_pos = {25, 25};
 	vector2d_t enemy_duration = {1,0};
@@ -109,7 +119,7 @@ int engine_update(engine_t *e)
 	uint32_t current_time = SDL_GetTicks();
 	if (current_time > player_last_time + PLAYER_UPDATE_DELAY)
 	{
-		game_object_update(e->player);
+		player_update(e->player);
 		player_last_time = current_time;
 	}
 
@@ -128,7 +138,7 @@ int engine_update(engine_t *e)
 int engine_render(engine_t *e)
 {
 	SDL_RenderClear(e->renderer);
-	game_object_draw(e->player);
+	player_draw(e->player);
 	enemy_draw(e->enemy);
 	SDL_RenderPresent(e->renderer);
 	return 0;
@@ -143,11 +153,13 @@ int engine_delete(engine_t *e)
 		if (e->window !=NULL)
 			SDL_DestroyWindow(e->window);
 		if (e->player != NULL)
-			game_object_delete(e->player);
+			player_delete(e->player);
 		if (e->enemy != NULL)
 			enemy_delete(e->enemy);
 		if (e->creatures != NULL)
 			tilemap_delete(e->creatures);
+		if (e->swoosh != NULL)
+			tilemap_delete(e->swoosh);
 		free(e);
 	}
 	return 0;
